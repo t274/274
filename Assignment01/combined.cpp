@@ -12,7 +12,7 @@
 
 uint16_t generate_private(){
     //@TODO: I think it's done
-    uint16_t private_key = 0;
+    uint16_t private_kemy = 0;
     uint16_t read_random = 0;
     for(int i = 0; i < 16; ++i){
         
@@ -41,42 +41,74 @@ uint32_t pow_mod(uint32_t base, uint32_t power, uint32_t m){
     return result;
 }
 
+int str2int(char* buf){
+    return atoi(buf); 
+}
+
 /* User enters their partner's public key */
 int enter_public(){
     //@TODO: finish this, essentially the chat example
     int my_PC_byte = 0;
     Serial.print("Enter your partner's public key: ");
-     while(true){
-        
-        //grab byte from PC
-        my_PC_byte = Serial.read();
+     //~ while(true){
+        //~ 
+        //~ //grab byte from PC
+        //~ my_PC_byte = Serial.read();
+        //~ if(my_PC_byte != -1){
+            //~ if(my_PC_byte == 10 || my_PC_byte == 13){
+                //~ Serial.write('\n'); //character code line feed
+                //~ Serial.write('\r'); //carriage return
+                //~ break;
+                //~ //Serial.write("\n\r"); //double quotes for 2+ chars
+            //~ }
+            //~ else {
+                //~ //write to uint16 or 32
+                //~ Serial.write((char)my_PC_byte);
+                //~ 
+            //~ }    
+        //~ }
+    //~ }
+    //~ Serial.println("Entered number: ");
+    
+    const int LINE_LENGTH = 128;
+    int result = 0;
+    char line[LINE_LENGTH + 1];
+    int i = 0;
+    while(i < LINE_LENGTH){
+        int my_PC_byte = Serial.read();
         if(my_PC_byte != -1){
             if(my_PC_byte == 10 || my_PC_byte == 13){
-                Serial.write('\n'); //character code line feed
-                Serial.write('\r'); //carriage return
                 break;
-                //Serial.write("\n\r"); //double quotes for 2+ chars
             }
-            else {
-                //write to uint16 or 32
-                Serial.write((char)my_PC_byte);
-            }    
+            
+            line[i] = my_PC_byte;
+            ++i;
+            Serial.print((char)my_PC_byte);
         }
     }
-    Serial.println("Entered number: ");
+    line[i] = 0;
+    result = str2int(line);
+    Serial.println();
+    return result;
+    
+    
+    
+    
     return 0;
 }
 
 /* Encrypts outgoing bytes */
 int encrypt(int my_PC_byte, int private_key){
     //@TODO: finish this
-    return 0;
+    int encrypted_byte = my_PC_byte ^ private_key;
+    return encrypted_byte;
 }
 
 /* Decrypts incoming bytes */
 int decrypt(int incoming_byte, int private_key){
     //@TODO: finish this
-    return 0;
+    int decrypted_byte = incoming_byte ^ private_key;
+    return decrypted_byte;
 }
 
 /* Main */
@@ -121,8 +153,9 @@ int main(void) {
     int public_key_A = pow_mod(generator, private_key, prime); //pow_mod()
     Serial.print("public_key_A: "); Serial.println(public_key_A);
     int public_key_B = enter_public(); //while true, essential the same as loop
+    Serial.print("public_key_B: "); Serial.println(public_key_B);
     int shared_key = pow_mod(public_key_B, private_key, prime);
-    Serial.end();
+
     
     /* LOOP */
     //copy loop from chat, essentially complete
@@ -150,6 +183,7 @@ int main(void) {
                 //Serial.write("\n\r"); //double quotes for 2+ chars
             }
             else {
+                Serial.print("user: ");
                 Serial.write((char)decrypted_byte);
                 Serial.println();
             }
@@ -161,9 +195,11 @@ int main(void) {
         if(my_PC_byte != -1){
             //int byte_to_send = incoming_byte ^ secretkey;
             int byte_to_send = encrypt(my_PC_byte, private_key);
+            int decrypt_check = decrypt(byte_to_send, private_key);
+            Serial.write((char)my_PC_byte);
+           // Serial.write((char)decrypt_check);
             Serial3.write((char)byte_to_send);
-            //Serial.write((char)my_PC_byte);
-            //Serial.write((char)byte_to_send);
+
         }
     }
     Serial.end();
