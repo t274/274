@@ -24,7 +24,6 @@ uint16_t generate_private(){
    
         delay(50);
     }
-    
     return private_key;
 }
 
@@ -45,6 +44,26 @@ uint32_t pow_mod(uint32_t base, uint32_t power, uint32_t m){
 /* User enters their partner's public key */
 int enter_public(){
     //@TODO: finish this, essentially the chat example
+    int my_PC_byte = 0;
+    Serial.print("Enter your partner's public key: ");
+     while(true){
+        
+        //grab byte from PC
+        my_PC_byte = Serial.read();
+        if(my_PC_byte != -1){
+            if(my_PC_byte == 10 || my_PC_byte == 13){
+                Serial.write('\n'); //character code line feed
+                Serial.write('\r'); //carriage return
+                break;
+                //Serial.write("\n\r"); //double quotes for 2+ chars
+            }
+            else {
+                //write to uint16 or 32
+                Serial.write((char)my_PC_byte);
+            }    
+        }
+    }
+    Serial.println("Entered number: ");
     return 0;
 }
 
@@ -145,7 +164,6 @@ int main(void) {
             Serial3.write((char)byte_to_send);
             //Serial.write((char)my_PC_byte);
             //Serial.write((char)byte_to_send);
-           
         }
     }
     Serial.end();
