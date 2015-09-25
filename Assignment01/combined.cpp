@@ -98,20 +98,20 @@ int enter_public(){
 }
 
 /* Encrypts outgoing bytes */
-int encrypt(int my_PC_byte, int private_key){
+char encrypt(int my_PC_byte, int shared_key){
     //@TODO: finish this
-    Serial.print("Before encryption: "); Serial.write((char)my_PC_byte); Serial.println();
-    int encrypted_byte = (my_PC_byte) ^ (private_key % 256);
-    Serial.print("After encryption: "); Serial.write((char)encrypted_byte); Serial.println();
+    //~ Serial.print("Before encryption: "); Serial.write((char)my_PC_byte); Serial.println();
+    char encrypted_byte = ((my_PC_byte) ^ ((shared_key) % 256));
+    //~ Serial.print("After encryption: "); Serial.write((char)encrypted_byte); Serial.println();
     return encrypted_byte;
 }
 
 /* Decrypts incoming bytes */
-int decrypt(int incoming_byte, int private_key){
+char decrypt(int incoming_byte, int shared_key){
     //@TODO: finish this
-    Serial.print("Before decryption: "); Serial.write((char)incoming_byte); Serial.println();
-    int decrypted_byte = (incoming_byte) ^ (private_key % 256);
-    Serial.print("After decryption: "); Serial.write((char)decrypted_byte); Serial.println();
+    //~ Serial.print("Before decryption: "); Serial.write((char)incoming_byte); Serial.println();
+    char decrypted_byte = ((incoming_byte) ^ ((shared_key) % 256));
+    //~ Serial.print("After decryption: "); Serial.write(decrypted_byte); Serial.println();
     return decrypted_byte;
 }
 
@@ -153,13 +153,13 @@ int main(void) {
     }
     
     Serial.begin(9600);
-    Serial.print("private_key: "); Serial.println(private_key);
+    //~ Serial.print("private_key: "); Serial.println(private_key);
     int public_key_A = pow_mod(generator, private_key, prime); //pow_mod()
-    Serial.print("public_key_A: "); Serial.println(public_key_A);
+    Serial.print("Shared key A: "); Serial.println(public_key_A);
     int public_key_B = enter_public(); //while true, essential the same as loop
-    Serial.print("public_key_B: "); Serial.println(public_key_B);
+    Serial.print("Shared key B: "); Serial.println(public_key_B);
     int shared_key = pow_mod(public_key_B, private_key, prime);
-    Serial.print("The shared key is: "); Serial.println(shared_key);
+    //~ Serial.print("The shared key is: "); Serial.println(shared_key);
 
     
     /* LOOP */
@@ -180,7 +180,7 @@ int main(void) {
           
             //decrypt here
             //int decryptedByte = incomingByte ^ secretkey;
-            int decrypted_byte = decrypt(incoming_byte, private_key);
+            int decrypted_byte = decrypt(incoming_byte, shared_key);
             
             if(decrypted_byte == 10 || decrypted_byte == 13){
                 Serial.write('\n'); //character code line feed
@@ -188,9 +188,9 @@ int main(void) {
                 //Serial.write("\n\r"); //double quotes for 2+ chars
             }
             else {
-                Serial.print("Message sent: ");
-                Serial.write((char)decrypted_byte);
-                Serial.println();
+                //~ Serial.print("Message sent: ");
+                Serial.write(decrypted_byte);
+                //~ Serial.println();
             } // write to PC
         }
         
@@ -199,8 +199,8 @@ int main(void) {
         my_PC_byte = Serial.read();
         if(my_PC_byte != -1){
             //int byte_to_send = incoming_byte ^ secretkey;
-            int byte_to_send = encrypt(my_PC_byte, private_key);
-            Serial.print("Sending this byte: "); Serial.write((char)byte_to_send); Serial.println();
+            char byte_to_send = encrypt(my_PC_byte, shared_key);
+            //~ Serial.print("Sending this byte: "); Serial.write(byte_to_send); Serial.println();
             int decrypt_check = decrypt(byte_to_send, private_key);
             Serial.write((char)my_PC_byte);
            // Serial.write((char)decrypt_check);
