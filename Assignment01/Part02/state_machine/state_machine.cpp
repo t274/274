@@ -117,14 +117,21 @@ uint32_t next_key(uint32_t current_key) {
 uint32_t skey = 0;
 uint32_t ckey = 0;
 
-void handshake(int mode){
-    typedef enum { start=0, WaitForAck_1, Listen, WaitingForKey_1,
+
+bool client_handshake(){
+}
+
+bool server_handshake(){
+}
+
+bool handshake(int mode){
+    typedef enum { Start=0, WaitForAck_1, Listen, WaitingForKey_1,
         WaitForAck_2, WaitingForKey_2, WaitForAck_3,
          DataExchange } State;
     char* StateNames[] = {"Start","WaitForAck_1","Listen",
         "WaitingForKey_1","WaitForAck_2","WaitingForKey_2",
-        "WaitForAck_3","DataExchange" }
-    State state = mode;
+        "WaitForAck_3","DataExchange" };
+    State state = State(mode);
     unsigned long time_check = millis();
     bool logic_check = 0;
     
@@ -140,7 +147,7 @@ void handshake(int mode){
         }
         else if (state == WaitForAck_1){
             logic_check = wait_on_serial3(5,1000);
-            if(logic_check &&  ((char()(Serial3.read()<<32)) == 'C') ){
+            if(logic_check &&  (((char)(Serial3.read()<<32)) == 'C') ){
                 
                 skey = uint32_from_serial3();
                 Serial3.write('A');
@@ -152,7 +159,7 @@ void handshake(int mode){
         /* server starting point */
         else if (state == Listen){
             logic_check = wait_on_serial3(1,1000);
-            if(logic_check && (char()(Serial3.read) == 'C')){
+            if(logic_check && (((char)Serial3.read()) == 'C')){
                 state = WaitingForKey_1;
             }
             else {state = Listen; }
@@ -170,10 +177,10 @@ void handshake(int mode){
         else if (state == WaitForAck_2){
             logic_check = wait_on_serial3(1,1000);
             if(logic_check){
-                if(char()(Serial3.read) == 'A'){
+                if((char)(Serial3.read()) == 'A'){
                     state = DataExchange;
                 }
-                else if(char()(Serial3.read) == 'C'){
+                else if((char)(Serial3.read()) == 'C'){
                     state = WaitingForKey_2;
                 }
                 //ELSE?
@@ -183,17 +190,17 @@ void handshake(int mode){
         else if (state == WaitingForKey_2){
             logic_check = wait_on_serial3(4,1000);
             if(logic_check){
-                state = WaitingForAck_3;
+                state = WaitForAck_3;
             }
             else { state = Listen; }
         }
-        else if (state == WaitingForAck_3){
+        else if (state == WaitForAck_3){
             logic_check = wait_on_serial3(1,1000);
             if(logic_check){
-                if(char()(Serial3.read) == 'C'){
+                if((char)(Serial3.read()) == 'C'){
                     state = WaitingForKey_2;
                 }
-                else if(char()(Serial3.read) == 'A'){
+                else if((char)(Serial3.read()) == 'A'){
                     state = DataExchange;
                 }
             }
@@ -250,9 +257,10 @@ int main(void) {
     }
     
     //handshake before this
+    //depending on configuration do dif
     int public_key_A = pow_mod(generator, private_key, prime);
     Serial.print("Public key A: "); Serial.println(public_key_A);
-    int public_key_B = enter_public();
+    int public_key_B = skey;
     Serial.print("Public key B: "); Serial.println(public_key_B);
     int shared_key = pow_mod(public_key_B, private_key, prime);
     Serial.print("The shared key is: "); Serial.println(shared_key);
@@ -291,12 +299,13 @@ int main(void) {
     //Add your custom initialization here
     Serial.begin(9600);
     Serial3.begin(9600);
+    bool diditwork = 0;
     // this should be done after private key made
     // gets configuration of the arduino
     // made a function in case more complication methods are used
     int mode = get_configuration();
-    if (mode == 0) { handshake(0); } //check which it should be
-    else           { handshake(9999); }
+    if (mode == 0) { diditwork = handshake(0); } //check which it should be
+    else           { diditwork = handshake(9999); }
     //or
     //handshake(mode);
     //handshake

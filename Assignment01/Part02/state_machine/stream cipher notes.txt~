@@ -1,0 +1,24 @@
+key = 0x 1E 21 93 AE
+         byte3    byte0
+msg = "ABCDEFG"
+    = {65, 66, 67, 68, 69, 70, 71, 72}
+       |   |   |   |   |   |   |   |
+       AE  93  21  1E  AE  93  21  1E
+
+69 XOR 69 XOR key
+
+msg = "ABCDEFG"
+    = {65, 66, 67, 68, 69, 70, 71, 72}
+
+A = { 0,1,2,...,(2^31)-1 } reorder/rand permutation, key appears somewhere
+--> { 101, 0x 18EE22131, ..., 0x 1E2193AE, 0x AAFFBB11, ... }
+
+start by using key, then go through one by one
+wrap if at end
+
+BUT would take way too much memory
+
+so instead compute next number in sequence instead of storing
+
+f(A) --> A (maps every element of A to A)
+bijection
