@@ -1,0 +1,91 @@
+
+handshake:
+
+
+
+Client:
+
+start (0)
+    send CR(ckey) = 'C' client's public key
+    delay(1000);
+WaitingforAck
+    
+
+
+
+delay(1000); ?
+
+Server:
+
+
+
+bool isValidEmail(char* str){
+    //enumerating a bunch of names
+    typedef enum { start=0, rest, sid_1_first, sid_1_rest,
+                   sid_2_first, sid_2_rest, sid_3_first, sid_3_rest,
+                   sid_4_first, sid_4_rest, EOS, ERR, OK } State;
+                   
+    char* StateNames[] = {"first_char", "rest", "sid_1_first",
+                          "sid_1_rest", "sid_2_first", "sid_2_rest",
+                          "sid_3_first", "sid_3_rest", "sid_4_first",
+                          "sid_4_rest", "EOS","ERR","OK"};
+    State state = first_char;
+    int i = 0; // position in string
+    while( (state != OK) && (state != ERR) ){
+        char c = str[i];
+
+        if      ((state == first_char)  && (isalpha(c) || c=='_' ))
+                { state =  rest; }
+        else if ((state == first_char)  && (c==' '))
+                { state =  first_char;  }
+        else if ((state == rest)        && (isalpha(c) || isdigit(c) 
+                                        || c=='_' || c=='-' || c=='.')) 
+                { state =  rest; }
+        else if ((state == rest)        && (c=='@'))
+                { state =  sid_1_first; }
+        else if ((state == sid_1_first) && isalpha(c))
+                { state =  sid_1_rest;  }
+        else if ((state == sid_1_rest)  && isalpha(c))
+                { state =  sid_1_rest;  }
+        else if ((state == sid_1_rest)  && (c=='.'))
+                { state =  sid_2_first; }
+        
+        else if ((state == sid_2_first) && isalpha(c)) 
+                { state =  sid_2_rest;  }
+        else if ((state == sid_2_rest)  && isalpha(c))
+                { state =  sid_2_rest;  }
+        else if ((state == sid_2_rest)  && (c=='.'))
+                { state =  sid_3_first; }
+        else if ((state == sid_2_rest)  && (c==0))
+                { state =  OK ; }
+        else if ((state == sid_2_rest)  && (c==' '))
+                { state =  EOS; }
+        
+        else if ((state == sid_3_first) && isalpha(c))
+                { state =  sid_3_rest;  }
+        else if ((state == sid_3_rest)  && isalpha(c))
+                { state =  sid_3_rest;  }
+        else if ((state == sid_3_rest)  && (c=='.'))
+                { state =  sid_4_first; }
+        else if ((state == sid_3_rest)  && (c==0)) 
+                { state =  OK ; }
+        else if ((state == sid_3_rest)  && (c==' ')) 
+                { state =  EOS; }
+        
+        else if ((state == sid_4_first) && isalpha(c))
+                { state =  sid_4_rest;  }
+        else if ((state == sid_4_rest)  && isalpha(c))
+                { state =  sid_4_rest;  }
+        else if ((state == sid_4_rest)  && (c==0))
+                { state =  OK ; }
+        else if ((state == sid_4_rest)  && (c==' '))
+                { state =  EOS; }
+        
+        else if ( (state == EOS)  && (c==' ')   ) { state = EOS; }
+        else if ( (state == EOS)  && (c==0)     ) { state = OK;  }
+        else                                      { state = ERR; }
+        ++i;
+    }
+    //Serial.print("End state: "); Serial.println(StateNames[state]);
+    return (state == OK);
+}

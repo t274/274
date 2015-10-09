@@ -1,0 +1,32 @@
+Thomas Tetz
+Brett Baker
+EA2
+
+
+References:
+* Csaba, most of the code is from in-class activities
+
+
+Accessories: 
+* 2 Arduino Mega Board (AMG)
+* 3 wires
+
+
+Wiring instructions:
+* Arduino 1 GND <--> Arduino_2 GND
+* Arduino_1 TX3 <--> Arduino_2 RX3
+* Arduino_1 RX3 <--> Arduino_2 TX3
+
+
+How to run code (all done from the terminal):
+* connect each Arduino to a separate computer
+* change directories to the unzipped folder containing
+  this file, Makefile, and Assignment1-1.cpp on each computer
+* type "make upload" and press enter on each computer
+* type "serial-mon" and press enter on each computer
+
+
+Assumptions:
+All input will be valid
+
+
