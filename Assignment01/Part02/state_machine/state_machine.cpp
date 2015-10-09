@@ -248,13 +248,20 @@ int main(void) {
      /* SETUP */
     uint32_t prime = 2147483647;
     uint32_t generator = 16807;
-    uint16_t private_key = prime + 1;
+    uint16_t private_key = 0;
+    
+    //~ /* Generates private key, sometimes takes a while */
+    //~ while(private_key >= prime){
+        //~ //@TODO: is there a better way?
+        //~ private_key = generate_private();
+    //~ }
+    //~ 
     
     /* Generates private key, sometimes takes a while */
-    while(private_key >= prime){
+    do{
         //@TODO: is there a better way?
         private_key = generate_private();
-    }
+    }while(private_key >= prime);
     
     //handshake before this
     //depending on configuration do dif

@@ -22,3 +22,8 @@ so instead compute next number in sequence instead of storing
 
 f(A) --> A (maps every element of A to A)
 bijection
+
+key0 = key
+key1 = f(key0)
+key2 = f(f(key0)) = f(key1)
+key3 = f(f(f(key0))) = f(key2)

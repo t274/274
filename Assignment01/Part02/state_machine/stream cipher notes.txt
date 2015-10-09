@@ -12,6 +12,7 @@ msg = "ABCDEFG"
 
 A = { 0,1,2,...,(2^31)-1 } reorder/rand permutation, key appears somewhere
 --> { 101, 0x 18EE22131, ..., 0x 1E2193AE, 0x AAFFBB11, ... }
+                                    |_____f______^
 
 start by using key, then go through one by one
 wrap if at end
