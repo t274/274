@@ -118,12 +118,6 @@ uint32_t skey = 0;
 uint32_t ckey = 0;
 
 
-bool client_handshake(){
-}
-
-bool server_handshake(){
-}
-
 bool handshake(int mode){
     typedef enum { Start=0, WaitForAck_1, Listen, WaitingForKey_1,
         WaitForAck_2, WaitingForKey_2, WaitForAck_3,
@@ -144,6 +138,7 @@ bool handshake(int mode){
             Serial3.write('C');
             uint32_to_serial3(ckey);
             state = WaitForAck_1;
+            Serial.println("Start");
         }
         else if (state == WaitForAck_1){
             logic_check = wait_on_serial3(5,1000);
@@ -159,6 +154,7 @@ bool handshake(int mode){
         /* server starting point */
         else if (state == Listen){
             logic_check = wait_on_serial3(1,1000);
+            Serial.println("Listen");
             if(logic_check && (((char)Serial3.read()) == 'C')){
                 state = WaitingForKey_1;
             }
@@ -250,6 +246,26 @@ int main(void) {
     uint32_t generator = 16807;
     uint16_t private_key = 0;
     
+    pinMode(13, INPUT);
+    
+    bool diditwork = 0;
+    // this should be done after private key made
+    // gets configuration of the arduino
+    // made a function in case more complication methods are used
+    Serial.begin(9600);
+    Serial3.begin(9600);
+    int mode = get_configuration();
+    Serial.print("mode: "); Serial.println(mode);
+    //5V means server
+
+    if(mode){diditwork = handshake(2);}
+    else {diditwork = handshake(0);}
+    
+    //~ if (mode == 0) { diditwork = handshake(0); } //check which it should be
+    //~ else           { diditwork = handshake(9999); }
+    //~ 
+    
+    
     //~ /* Generates private key, sometimes takes a while */
     //~ while(private_key >= prime){
         //~ //@TODO: is there a better way?
@@ -273,7 +289,7 @@ int main(void) {
     Serial.print("The shared key is: "); Serial.println(shared_key);
 
     /* LOOP */
-    Serial3.begin(9600); // Serial3: communication with other board
+     // Serial3: communication with other board
     int incoming_byte = 0;
     int my_PC_byte = 0;
     while(true){
@@ -304,21 +320,6 @@ int main(void) {
     Serial.end();
     Serial3.end();
     //Add your custom initialization here
-    Serial.begin(9600);
-    Serial3.begin(9600);
-    bool diditwork = 0;
-    // this should be done after private key made
-    // gets configuration of the arduino
-    // made a function in case more complication methods are used
-    int mode = get_configuration();
-    if (mode == 0) { diditwork = handshake(0); } //check which it should be
-    else           { diditwork = handshake(9999); }
-    //or
-    //handshake(mode);
-    //handshake
-    
-    Serial.end();
-    Serial3.end();
 
     return 0;
 }
