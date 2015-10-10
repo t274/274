@@ -72,42 +72,7 @@ uint32_t pow_mod(uint32_t base, uint32_t power, uint32_t m) {
 }
 
 
-/** Implements the Park-Miller algorithm with 32 bit integer arithmetic 
- * @return ((current_key * 48271)) mod (2^31 - 1);
- * This is linear congruential generator, based on the multiplicative
- * group of integers modulo m = 2^31 - 1.
- * The generator has a long period and it is relatively efficient.
- * Most importantly, the generator's modulus is not a power of two
- * (as is for the built-in rng),
- * hence the keys mod 2^{s} cannot be obtained
- * by using a key with s bits.
- * Based on:
- * http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt
- */
-uint32_t next_key(uint32_t current_key) {
-  const uint32_t modulus = 0x7FFFFFFF; // 2^31-1
-  const uint32_t consta = 48271; // we use that this is <=15 bits
-  uint32_t lo = consta*(current_key & 0xFFFF);  
-  uint32_t hi = consta*(current_key >> 16); 
-  lo += (hi & 0x7FFF)<<16;
-  lo += hi>>15;
-  if (lo > modulus) lo -= modulus;
-  return lo;
-}
 
-/* Encrypts outgoing bytes */
-char encrypt(int my_PC_byte, int shared_key){
-    //@TODO: incorporate stream cipher
-    char encrypted_byte = ((my_PC_byte) ^ ((shared_key) % 256));
-    return encrypted_byte;
-}
-
-/* Decrypts incoming bytes */
-char decrypt(int incoming_byte, int shared_key){
-    //@TODO: incorporate stream cipher
-    char decrypted_byte = ((incoming_byte) ^ ((shared_key) % 256));
-    return decrypted_byte;
-}
 
 /** Waits for a certain number of bytes on Serial3 or timeout 
  * @param nbytes: the number of bytes we want
@@ -256,6 +221,55 @@ bool handshake(int mode){
     return (state == DataExchange); //useless
 }
 
+
+/** Implements the Park-Miller algorithm with 32 bit integer arithmetic 
+ * @return ((current_key * 48271)) mod (2^31 - 1);
+ * This is linear congruential generator, based on the multiplicative
+ * group of integers modulo m = 2^31 - 1.
+ * The generator has a long period and it is relatively efficient.
+ * Most importantly, the generator's modulus is not a power of two
+ * (as is for the built-in rng),
+ * hence the keys mod 2^{s} cannot be obtained
+ * by using a key with s bits.
+ * Based on:
+ * http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt
+ */
+uint32_t next_key(uint32_t current_key) {
+  const uint32_t modulus = 0x7FFFFFFF; // 2^31-1
+  const uint32_t consta = 48271; // we use that this is <=15 bits
+  uint32_t lo = consta*(current_key & 0xFFFF);  
+  uint32_t hi = consta*(current_key >> 16); 
+  lo += (hi & 0x7FFF)<<16;
+  lo += hi>>15;
+  if (lo > modulus) lo -= modulus;
+  return lo;
+}
+
+/* Encrypts outgoing bytes */
+uint32_t encrypt(uint32_t my_PC_byte, uint32_t shared_key){
+    //@TODO: incorporate stream cipher
+    uint32_t encrypted_byte = ((my_PC_byte) ^ ((shared_key) % 256));
+    Serial.write((char)my_PC_byte);
+    Serial3.write((char)encrypted_byte);
+    shared_key = next_key(shared_key);
+    
+    return shared_key;
+}
+
+/* Decrypts incoming bytes */
+uint32_t decrypt(uint32_t incoming_byte, uint32_t shared_key){
+    //@TODO: incorporate stream cipher
+    uint32_t decrypted_byte = ((incoming_byte) ^ ((shared_key) % 256));
+    if(decrypted_byte ==10 || decrypted_byte == 13){
+        Serial.write('\n');
+        Serial.write('\r');
+    }
+    else{Serial.write(decrypted_byte);}
+    shared_key = next_key(shared_key);
+    
+    return shared_key;
+}
+
 int get_configuration(){
     int mode = digitalRead(13);
     return mode;
@@ -375,14 +389,8 @@ int main(void) {
         if(Serial3.available()){
             //decrypt byte
             incoming_byte = Serial3.read();
-            int decrypted_byte = decrypt(incoming_byte, shared_key);
-            if(decrypted_byte == 10 || decrypted_byte == 13){
-                Serial.write('\n'); //character code line feed
-                Serial.write('\r'); //carriage return
-            }
-            else {
-                Serial.write(decrypted_byte);
-            }
+            shared_key = decrypt(incoming_byte, shared_key);
+
         }
         
         //grab byte from PC
@@ -390,9 +398,8 @@ int main(void) {
         if(Serial.available()){
             //encrypt byte
             my_PC_byte = Serial.read();
-            char byte_to_send = encrypt(my_PC_byte, shared_key);
-            Serial.write((char)my_PC_byte);
-            Serial3.write((char)byte_to_send);
+            shared_key = encrypt(my_PC_byte, shared_key);
+
         }
     }
     Serial.end();
