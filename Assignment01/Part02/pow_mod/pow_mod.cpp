@@ -1,13 +1,13 @@
 /*
   Assignment 1.2
-
+  
+  
   Improved encrypted chat program between two arduinos.
 */
 
 #include <Arduino.h>
 
 /* Generates private key for the user */
-
 uint32_t generate_private(){
     uint32_t private_key = 0;
     uint32_t read_random = 0;
@@ -25,22 +25,7 @@ uint32_t generate_private(){
     return private_key;
 }
 
-//~ 
-//~ uint32_t mul_mod(uint32_t a, uint32_t b, uint32_t m) {
-    //~ uint32_t product = 0;
-    //~ int a_bit;
-    //~ //mod b in case it is too large
-    //~ b = b % m;
-    //~ for (int i = 0; i <= 31; i++) {
-        //~ a_bit = 1 & (a >> i);
-        //~ if (a_bit == 1) {
-            //~ product = (product + (a_bit % m) * b )% m;
-        //~ }
-        //~ b = (b << 1) % m;
-    //~ }
-    //~ return product;
-//~ }
-
+/*  */
 uint32_t mul_mod(uint32_t a, uint32_t b, uint32_t m) {
   uint32_t result = 0;
   uint32_t x = b % m;
@@ -246,28 +231,28 @@ uint32_t next_key(uint32_t current_key) {
 }
 
 /* Encrypts outgoing bytes */
-uint32_t encrypt(uint32_t my_PC_byte, uint32_t shared_key){
+uint32_t encrypt(uint32_t my_PC_byte, uint32_t shared_key_2){
     //@TODO: incorporate stream cipher
-    uint32_t encrypted_byte = ((my_PC_byte) ^ ((shared_key) % 256));
+    uint32_t encrypted_byte = ((my_PC_byte) ^ ((shared_key_2) % 256));
     Serial.write((char)my_PC_byte);
     Serial3.write((char)encrypted_byte);
-    shared_key = next_key(shared_key);
+    shared_key_2 = next_key(shared_key_2);
     
-    return shared_key;
+    return shared_key_2;
 }
 
 /* Decrypts incoming bytes */
-uint32_t decrypt(uint32_t incoming_byte, uint32_t shared_key){
+uint32_t decrypt(uint32_t incoming_byte, uint32_t shared_key_1){
     //@TODO: incorporate stream cipher
-    uint32_t decrypted_byte = ((incoming_byte) ^ ((shared_key) % 256));
+    uint32_t decrypted_byte = ((incoming_byte) ^ ((shared_key_1) % 256));
     if(decrypted_byte ==10 || decrypted_byte == 13){
         Serial.write('\n');
         Serial.write('\r');
     }
     else{Serial.write(decrypted_byte);}
-    shared_key = next_key(shared_key);
+    shared_key_1 = next_key(shared_key_1);
     
-    return shared_key;
+    return shared_key_1;
 }
 
 int get_configuration(){
@@ -344,7 +329,7 @@ int main(void) {
 
 
     
-    uint32_t shared_key = 0;
+    uint32_t shared_key_1 = 0, shared_key_2 = 0;
     
 
     if(mode){diditwork = handshake(2);}
@@ -353,16 +338,17 @@ int main(void) {
     if(digitalRead(13)==HIGH){
         Serial.print("ckey: "); Serial.println(ckey);
         Serial.print("Server private_key: "); Serial.println(private_key);
-        shared_key = pow_mod(ckey, private_key, prime);
+        shared_key_1 = pow_mod(ckey, private_key, prime);
+        shared_key_2 = shared_key_1;
     }
     else{
         Serial.print("skey: "); Serial.println(skey);
         Serial.print("Client private_key: "); Serial.println(private_key);
-        shared_key = pow_mod(skey, private_key, prime);
+        shared_key_1 = pow_mod(skey, private_key, prime);
     }
     
 
-    Serial.print("The shared key is: "); Serial.println(shared_key);
+    Serial.print("The shared key is: "); Serial.println(shared_key_1);
     
     //~ if (mode == 0) { diditwork = handshake(0); } //check which it should be
     //~ else           { diditwork = handshake(9999); }
@@ -389,7 +375,7 @@ int main(void) {
         if(Serial3.available()){
             //decrypt byte
             incoming_byte = Serial3.read();
-            shared_key = decrypt(incoming_byte, shared_key);
+            shared_key_1 = decrypt(incoming_byte, shared_key_1);
 
         }
         
@@ -398,7 +384,7 @@ int main(void) {
         if(Serial.available()){
             //encrypt byte
             my_PC_byte = Serial.read();
-            shared_key = encrypt(my_PC_byte, shared_key);
+            shared_key_2 = encrypt(my_PC_byte, shared_key_2);
 
         }
     }
